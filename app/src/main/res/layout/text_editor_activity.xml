@@ -22,6 +22,7 @@
     <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="36dp"
+        android:id="@+id/scroll"
         android:scrollbars="none">
 
         <com.raival.fileexplorer.activity.editor.view.SymbolInputView
@@ -42,66 +43,85 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingLeft="8dp"
+            android:paddingHorizontal="8dp"
             android:paddingTop="8dp"
-            android:paddingRight="8dp"
             android:visibility="gone"
             tools:ignore="HardcodedText">
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/find_input"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/replace_input"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-            </com.google.android.material.textfield.TextInputLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:text="Find:" />
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/find_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:text="Rep:" />
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/replace_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_marginTop="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
                 <com.google.android.material.button.MaterialButton
+                    style="@style/Widget.Material3.Button.TextButton"
                     android:id="@+id/replace"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_margin="3dp"
+                    android:layout_marginStart="3dp"
                     android:layout_marginEnd="2dp"
                     android:layout_weight="1"
                     android:text="Rep" />
 
                 <com.google.android.material.button.MaterialButton
+                    style="@style/Widget.Material3.Button.TextButton"
                     android:id="@+id/replace_all"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_margin="3dp"
+                    android:layout_marginStart="3dp"
                     android:layout_marginEnd="2dp"
                     android:layout_weight="1"
                     android:text="All" />
 
                 <com.google.android.material.button.MaterialButton
+                    style="@style/Widget.Material3.Button.TextButton"
                     android:id="@+id/previous"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_margin="3dp"
+                    android:layout_marginStart="3dp"
                     android:layout_marginEnd="2dp"
                     android:layout_weight="1"
                     android:text="Prev" />
 
                 <com.google.android.material.button.MaterialButton
+                    style="@style/Widget.Material3.Button.TextButton"
                     android:id="@+id/next"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"

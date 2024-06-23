@@ -11,18 +11,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.PopupMenu
-import androidx.drawerlayout.widget.DrawerLayout
-import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
-import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.textview.MaterialTextView
 import com.raival.fileexplorer.App.Companion.showMsg
 import com.raival.fileexplorer.R
@@ -32,7 +27,13 @@ import com.raival.fileexplorer.common.dialog.CustomDialog
 import com.raival.fileexplorer.common.view.BottomBarView
 import com.raival.fileexplorer.common.view.TabView
 import com.raival.fileexplorer.common.view.TabView.OnUpdateTabViewListener
-import com.raival.fileexplorer.extension.*
+import com.raival.fileexplorer.databinding.ActivityMainBinding
+import com.raival.fileexplorer.databinding.ActivityMainDrawerBinding
+import com.raival.fileexplorer.extension.getAvailableMemoryBytes
+import com.raival.fileexplorer.extension.getShortLabel
+import com.raival.fileexplorer.extension.getTotalMemoryBytes
+import com.raival.fileexplorer.extension.getUsedMemoryBytes
+import com.raival.fileexplorer.extension.toDp
 import com.raival.fileexplorer.tab.BaseDataHolder
 import com.raival.fileexplorer.tab.BaseTabFragment
 import com.raival.fileexplorer.tab.apps.AppsTabDataHolder
@@ -50,21 +51,16 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 
-class MainActivity : BaseActivity() {
+class MainActivity : BaseActivity<ActivityMainBinding>() {
     private var confirmExit = false
 
-    lateinit var tabView: TabView
-    lateinit var toolbar: MaterialToolbar
-    lateinit var bottomBarView: BottomBarView
+    private lateinit var drawer: ActivityMainDrawerBinding
 
-    private lateinit var drawerLayout: View
-    private lateinit var drawer: DrawerLayout
-    private lateinit var drawerStorageSpaceProgress: LinearProgressIndicator
-    private lateinit var drawerStorageSpace: TextView
-    private lateinit var drawerRootSpaceProgress: LinearProgressIndicator
-    private lateinit var drawerRootSpace: TextView
-    private lateinit var bookmarksList: RecyclerView
-    private lateinit var fragmentContainerView: FragmentContainerView
+    lateinit var bottomBarView: BottomBarView
+    lateinit var toolbar: MaterialToolbar
+    lateinit var tabView: TabView
+
+    override fun getViewBinding() = ActivityMainBinding.inflate(layoutInflater)
 
     private val mainViewModel: MainViewModel
         get() {
@@ -92,7 +88,7 @@ class MainActivity : BaseActivity() {
         if (tabFragments.isEmpty()) {
             loadDefaultTab()
         } else {
-            fragmentContainerView.post { restoreTabs() }
+            binding.fragmentContainer.post { restoreTabs() }
         }
     }
 
@@ -104,14 +100,14 @@ class MainActivity : BaseActivity() {
             if (dataHolder.tag != activeFragmentTag) {
                 when (dataHolder) {
                     is FileExplorerTabDataHolder -> {
-                        tabView.insertNewTabAt(i, dataHolder.tag, false).setName(
+                        binding.tabs.insertNewTabAt(i, dataHolder.tag, false).setName(
                             dataHolder.activeDirectory!!.getShortLabel(
                                 FileExplorerTabFragment.MAX_NAME_LENGTH
                             )
                         )
                     }
                     is AppsTabDataHolder -> {
-                        tabView.insertNewTabAt(i, dataHolder.tag, false).setName("Apps")
+                        binding.tabs.insertNewTabAt(i, dataHolder.tag, false).setName("Apps")
                     }
                     // handle other types of DataHolders here
                 }
@@ -139,32 +135,36 @@ class MainActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        drawer = ActivityMainDrawerBinding.inflate(layoutInflater)
 
-        tabView = findViewById(R.id.tabs)
-        fragmentContainerView = findViewById(R.id.fragment_container)
-        toolbar = findViewById(R.id.toolbar)
-        bottomBarView = findViewById(R.id.bottom_bar_view)
-        drawer = findViewById(R.id.drawer)
+        bottomBarView = binding.bottomBarView
+        toolbar = binding.toolbar
+        tabView = binding.tabs
 
-        setSupportActionBar(toolbar)
+        setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar!!.setHomeButtonEnabled(true)
         supportActionBar!!.setHomeAsUpIndicator(R.drawable.ic_round_menu_24)
-        toolbar.setNavigationOnClickListener(null)
+        binding.toolbar.setNavigationOnClickListener(null)
 
         val toggle: ActionBarDrawerToggle = object :
-            ActionBarDrawerToggle(this, drawer, toolbar, R.string.app_name, R.string.app_name) {
+            ActionBarDrawerToggle(
+                this,
+                binding.drawer,
+                binding.toolbar,
+                R.string.app_name,
+                R.string.app_name
+            ) {
             override fun onDrawerOpened(drawerView: View) {
                 super.onDrawerOpened(drawerView)
                 refreshBookmarks()
             }
         }
 
-        drawer.addDrawerListener(toggle)
+        binding.drawer.addDrawerListener(toggle)
         toggle.syncState()
 
-        tabView.setOnUpdateTabViewListener(object : OnUpdateTabViewListener {
+        binding.tabs.setOnUpdateTabViewListener(object : OnUpdateTabViewListener {
             override fun onUpdate(tab: TabView.Tab?, event: Int) {
                 if (tab == null) return
                 if (event == TabView.ON_SELECT) {
@@ -215,7 +215,7 @@ class MainActivity : BaseActivity() {
                             R.id.close_all -> {
                                 val activeFragment = activeFragment
                                 // Remove unselected tabs
-                                for (tag in tabView.tags) {
+                                for (tag in binding.tabs.tags) {
                                     if (!tag.startsWith(BaseTabFragment.DEFAULT_TAB_FRAGMENT_PREFIX) && tag != activeFragment.tag) {
                                         mainViewModel.getDataHolders()
                                             .removeIf { dataHolder1: BaseDataHolder -> dataHolder1.tag == tag }
@@ -228,7 +228,7 @@ class MainActivity : BaseActivity() {
                             }
                             R.id.close_others -> {
                                 val activeFragment = activeFragment
-                                for (tag in tabView.tags) {
+                                for (tag in binding.tabs.tags) {
                                     if (!tag.startsWith(BaseTabFragment.DEFAULT_TAB_FRAGMENT_PREFIX) && tag != activeFragment.tag && tag != tab.tag) {
                                         mainViewModel.getDataHolders()
                                             .removeIf { dataHolder1: BaseDataHolder -> dataHolder1.tag == tag }
@@ -246,7 +246,7 @@ class MainActivity : BaseActivity() {
             }
         })
 
-        findViewById<View>(R.id.tabs_options).setOnClickListener {
+        binding.tabsOptions.setOnClickListener {
             addNewTab()
         }
 
@@ -260,13 +260,13 @@ class MainActivity : BaseActivity() {
         if (newTheme != currentTheme) {
             recreate()
         } else {
-            bottomBarView.onUpdatePrefs()
+            binding.bottomBarView.onUpdatePrefs()
         }
     }
 
     @SuppressLint("NotifyDataSetChanged")
     fun refreshBookmarks() {
-        bookmarksList.adapter?.notifyDataSetChanged()
+        drawer.bookmarksList.adapter?.notifyDataSetChanged()
     }
 
     fun onBookmarkSelected(file: File) {
@@ -279,28 +279,21 @@ class MainActivity : BaseActivity() {
         } else {
             FileOpener(this).openFile(file)
         }
-        if (drawer.isDrawerOpen(drawerLayout)) drawer.close()
+        if (binding.drawer.isDrawerOpen(drawer.root)) binding.drawer.close()
     }
 
     private fun setupDrawer() {
-        drawerLayout = findViewById(R.id.drawer_layout)
-        drawerStorageSpaceProgress = drawerLayout.findViewById(R.id.storage_space_progress)
-        drawerRootSpaceProgress = drawerLayout.findViewById(R.id.root_space_progress)
-        drawerRootSpace = drawerLayout.findViewById(R.id.root_space)
-        drawerStorageSpace = drawerLayout.findViewById(R.id.storage_space)
-        bookmarksList = drawerLayout.findViewById(R.id.rv)
-
-        drawerLayout.findViewById<View>(R.id.apps).setOnClickListener {
+        drawer.apps.setOnClickListener {
             addNewTab(
                 AppsTabFragment(),
                 BaseTabFragment.APPS_TAB_FRAGMENT_PREFIX + generateRandomTag()
             )
-            drawer.close()
+            binding.drawer.close()
         }
 
-        bookmarksList.adapter = BookmarksAdapter(this)
+        drawer.bookmarksList.adapter = BookmarksAdapter(this)
 
-        drawerLayout.findViewById<MaterialToolbar>(R.id.toolbar).apply {
+        drawer.toolbar.apply {
             setTitle(R.string.app_name)
             subtitle = LINK
             menu.apply {
@@ -336,8 +329,8 @@ class MainActivity : BaseActivity() {
         val total = Environment.getRootDirectory().getTotalMemoryBytes()
         val available = Environment.getRootDirectory().getAvailableMemoryBytes()
 
-        drawerRootSpaceProgress.progress = (used.toDouble() / total.toDouble() * 100).toInt()
-        drawerRootSpace.text = (FileUtils.getFormattedSize(used)
+        drawer.storageSpaceProgress.progress = (used.toDouble() / total.toDouble() * 100).toInt()
+        drawer.storageSpace.text = (FileUtils.getFormattedSize(used)
                 + " used, "
                 + FileUtils.getFormattedSize(available)
                 + " available")
@@ -349,8 +342,8 @@ class MainActivity : BaseActivity() {
         val total = Environment.getExternalStorageDirectory().getTotalMemoryBytes()
         val available = Environment.getExternalStorageDirectory().getAvailableMemoryBytes()
 
-        drawerStorageSpaceProgress.progress = (used.toDouble() / total.toDouble() * 100).toInt()
-        drawerStorageSpace.text = (FileUtils.getFormattedSize(used)
+        drawer.storageSpaceProgress.progress = (used.toDouble() / total.toDouble() * 100).toInt()
+        drawer.storageSpace.text = (FileUtils.getFormattedSize(used)
                 + " used, "
                 + FileUtils.getFormattedSize(available)
                 + " available")
@@ -492,8 +485,8 @@ class MainActivity : BaseActivity() {
     }
 
     override fun onBackPressed() {
-        if (drawer.isDrawerOpen(drawerLayout)) {
-            drawer.close()
+        if (binding.drawer.isDrawerOpen(drawer.root)) {
+            binding.drawer.close()
             return
         }
         if (activeFragment.onBackPressed()) {
@@ -517,7 +510,7 @@ class MainActivity : BaseActivity() {
 
         // Default fragment (the one added when the app is opened) won't be closed.
         if (tag.startsWith("0_")) return
-        tabView.removeTab(tag)
+        binding.tabs.removeTab(tag)
     }
 
     companion object {

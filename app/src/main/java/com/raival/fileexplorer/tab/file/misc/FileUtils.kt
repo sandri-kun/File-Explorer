@@ -2,7 +2,6 @@ package com.raival.fileexplorer.tab.file.misc
 
 import android.app.Activity
 import android.content.Intent
-import android.content.pm.PackageInfo
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.text.Editable
@@ -18,8 +17,13 @@ import com.raival.fileexplorer.util.Log
 import com.raival.fileexplorer.util.PrefsUtils
 import com.raival.fileexplorer.util.PrefsUtils.FileExplorerTab.listFoldersFirst
 import com.raival.fileexplorer.util.PrefsUtils.FileExplorerTab.sortingMethod
-import java.io.*
-import java.util.*
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.InputStream
+import java.util.Locale
 
 
 object FileUtils {
@@ -404,12 +408,12 @@ A file with the same name exists."""
     }
 
     fun getApkIcon(file: File): Drawable? {
-        val pi: PackageInfo? =
+        val pi =
             App.appContext.packageManager.getPackageArchiveInfo(file.absolutePath, 0)
         return if (pi != null) {
-            pi.applicationInfo.sourceDir = file.absolutePath
-            pi.applicationInfo.publicSourceDir = file.absolutePath
-            pi.applicationInfo.loadIcon(App.appContext.packageManager)
+            pi.applicationInfo!!.sourceDir = file.absolutePath
+            pi.applicationInfo!!.publicSourceDir = file.absolutePath
+            pi.applicationInfo!!.loadIcon(App.appContext.packageManager)
         } else {
             ContextCompat.getDrawable(App.appContext, R.drawable.unknown_file_extension)
         }
@@ -418,7 +422,7 @@ A file with the same name exists."""
     fun getApkName(file: File): String? {
         val pi = App.appContext.packageManager.getPackageArchiveInfo(file.absolutePath, 0)
         return if (pi != null) {
-            App.appContext.packageManager.getApplicationLabel(pi.applicationInfo).toString()
+            App.appContext.packageManager.getApplicationLabel(pi.applicationInfo!!).toString()
         } else {
             pi?.applicationInfo?.name
         }

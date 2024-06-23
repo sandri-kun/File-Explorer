@@ -9,19 +9,18 @@
     <com.google.android.material.textview.MaterialTextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginVertical="8dp"
         android:padding="8dp"
-        android:text="Available Tasks"
+        android:text="@string/available_tasks"
         android:textSize="16sp"
         android:textStyle="bold" />
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/place_holder"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="No Tasks Found"
+        android:text="@string/no_tasks_found"
         android:textSize="16sp"
         android:textStyle="bold" />
 

@@ -10,11 +10,10 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.view.menu.MenuBuilder
-import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.elevation.SurfaceColors
-import com.google.android.material.textfield.TextInputLayout
 import com.raival.fileexplorer.App.Companion.showMsg
 import com.raival.fileexplorer.R
 import com.raival.fileexplorer.activity.editor.autocomplete.CustomCompletionItemAdapter
@@ -25,8 +24,8 @@ import com.raival.fileexplorer.activity.editor.language.kotlin.KotlinCodeLanguag
 import com.raival.fileexplorer.activity.editor.language.xml.XmlLanguage
 import com.raival.fileexplorer.activity.editor.scheme.DarkScheme
 import com.raival.fileexplorer.activity.editor.scheme.LightScheme
-import com.raival.fileexplorer.activity.editor.view.SymbolInputView
 import com.raival.fileexplorer.activity.model.TextEditorViewModel
+import com.raival.fileexplorer.databinding.TextEditorActivityBinding
 import com.raival.fileexplorer.tab.file.misc.FileMimeTypes
 import com.raival.fileexplorer.util.Log
 import com.raival.fileexplorer.util.PrefsUtils
@@ -34,40 +33,44 @@ import com.raival.fileexplorer.util.Utils
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
-import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry
+import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel
 import io.github.rosemoe.sora.widget.EditorSearcher.SearchOptions
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
 import io.github.rosemoe.sora.widget.component.Magnifier
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
-import org.eclipse.tm4e.core.registry.IThemeSource
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
-import java.util.*
+import java.util.Locale
 
-class TextEditorActivity : BaseActivity() {
-    private lateinit var editor: CodeEditor
-    private lateinit var searchPanel: View
+class TextEditorActivity : BaseActivity<TextEditorActivityBinding>() {
     private lateinit var editorViewModel: TextEditorViewModel
+
+    override fun getViewBinding() = TextEditorActivityBinding.inflate(layoutInflater)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.text_editor_activity)
 
         editorViewModel = ViewModelProvider(this).get(TextEditorViewModel::class.java)
-        editor = findViewById(R.id.editor)
-        val materialToolbar = findViewById<Toolbar>(R.id.toolbar)
-        searchPanel = findViewById(R.id.search_panel)
 
         setupSearchPanel()
 
-        val inputView = findViewById<SymbolInputView>(R.id.symbol_input)
-        inputView.bindEditor(editor)
-            .setTextColor(Utils.getColorAttribute(R.attr.colorOnSurface, this))
-            .setBackgroundColor(SurfaceColors.SURFACE_2.getColor(this))
-        inputView.addSymbol("->", "    ")
-            .addSymbols(arrayOf("_", "=", "{", "}", "<", ">", "|", "\\", "?", "+", "-", "*", "/"))
+        binding.symbolInput.apply {
+            bindEditor(binding.editor)
+                .setTextColor(
+                    Utils.getColorAttribute(
+                        R.attr.colorOnSurface,
+                        this@TextEditorActivity
+                    )
+                )
+                .setBackgroundColor(SurfaceColors.SURFACE_2.getColor(this@TextEditorActivity))
+            addSymbol("->", "    ")
+            addSymbols(arrayOf("_", "=", "{", "}", "<", ">", "|", "\\", "?", "+", "-", "*", "/"))
+        }
 
-        editor.apply {
+        binding.editor.apply {
             getComponent(EditorAutoCompletion::class.java).setLayout(CustomCompletionLayout())
             getComponent(EditorAutoCompletion::class.java)
                 .setAdapter(CustomCompletionItemAdapter())
@@ -76,7 +79,6 @@ class TextEditorActivity : BaseActivity() {
             props.symbolPairAutoCompletion = false
             props.deleteMultiSpaces = -1
             props.deleteEmptyLineFast = false
-
         }
 
         loadEditorPrefs()
@@ -85,13 +87,13 @@ class TextEditorActivity : BaseActivity() {
             File(intent.getStringExtra("file")!!)
         detectLanguage(editorViewModel.file!!)
 
-        materialToolbar.title = editorViewModel.file!!.name
-        setSupportActionBar(materialToolbar)
+        binding.toolbar.title = editorViewModel.file!!.name
+        setSupportActionBar(binding.toolbar)
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(true)
             setHomeButtonEnabled(true)
         }
-        materialToolbar.setNavigationOnClickListener { onBackPressed() }
+        binding.toolbar.setNavigationOnClickListener { onBackPressed() }
 
         if (!editorViewModel.file!!.exists()) {
             showMsg("File not found")
@@ -105,9 +107,15 @@ class TextEditorActivity : BaseActivity() {
 
         try {
             if (editorViewModel.content != null) {
-                editor.setText(editorViewModel.content.toString())
+                binding.editor.setText(editorViewModel.content.toString())
             } else {
-                editor.setText(editorViewModel.file?.readText())
+                lifecycleScope.launch(Dispatchers.IO) {
+                    val content = editorViewModel.file!!.readText()
+
+                    lifecycleScope.launch(Dispatchers.Main) {
+                        binding.editor.setText(content)
+                    }
+                }
             }
         } catch (exception: Exception) {
             Log.e(
@@ -131,38 +139,34 @@ class TextEditorActivity : BaseActivity() {
     }
 
     private fun setupSearchPanel() {
-        val findInput = searchPanel.findViewById<TextInputLayout>(R.id.find_input)
-        findInput.hint = "Find text"
-        val replaceInput = searchPanel.findViewById<TextInputLayout>(R.id.replace_input)
-        replaceInput.hint = "Replacement"
+        binding.findInput.hint = "Find text"
+        binding.replaceInput.hint = "Replacement"
 
-        findInput.editText?.addTextChangedListener(object : TextWatcher {
+        binding.findInput.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(charSequence: CharSequence, i: Int, i1: Int, i2: Int) {}
             override fun onTextChanged(charSequence: CharSequence, i: Int, i1: Int, i2: Int) {}
             override fun afterTextChanged(editable: Editable) {
                 if (editable.isNotEmpty()) {
-                    editor.searcher.search(
+                    binding.editor.searcher.search(
                         editable.toString(),
                         SearchOptions(false, false)
                     )
                 } else {
-                    editor.searcher.stopSearch()
+                    binding.editor.searcher.stopSearch()
                 }
             }
         })
-        searchPanel.apply {
-            findViewById<View>(R.id.next)
-                .setOnClickListener { if (editor.searcher.hasQuery()) editor.searcher.gotoNext() }
-            findViewById<View>(R.id.previous)
-                .setOnClickListener { if (editor.searcher.hasQuery()) editor.searcher.gotoPrevious() }
-            findViewById<View>(R.id.replace).setOnClickListener {
-                if (editor.searcher.hasQuery()) editor.searcher.replaceThis(
-                    replaceInput.editText?.text.toString()
+        binding.searchPanel.apply {
+            binding.next.setOnClickListener { if (binding.editor.searcher.hasQuery()) binding.editor.searcher.gotoNext() }
+            binding.previous.setOnClickListener { if (binding.editor.searcher.hasQuery()) binding.editor.searcher.gotoPrevious() }
+            binding.replace.setOnClickListener {
+                if (binding.editor.searcher.hasQuery()) binding.editor.searcher.replaceThis(
+                    binding.replaceInput.text.toString()
                 )
             }
-            findViewById<View>(R.id.replace_all).setOnClickListener {
-                if (editor.searcher.hasQuery()) editor.searcher.replaceAll(
-                    replaceInput.editText?.text.toString()
+            binding.replaceAll.setOnClickListener {
+                if (binding.editor.searcher.hasQuery()) binding.editor.searcher.replaceAll(
+                    binding.replaceInput.text.toString()
                 )
             }
         }
@@ -170,22 +174,22 @@ class TextEditorActivity : BaseActivity() {
 
     public override fun onStop() {
         super.onStop()
-        editorViewModel.content = editor.text
+        editorViewModel.content = binding.editor.text
     }
 
     override fun onBackPressed() {
-        if (searchPanel.visibility == View.VISIBLE) {
-            searchPanel.visibility = View.GONE
-            editor.searcher.stopSearch()
+        if (binding.searchPanel.visibility == View.VISIBLE) {
+            binding.searchPanel.visibility = View.GONE
+            binding.editor.searcher.stopSearch()
             return
         }
         try {
-            if (editorViewModel.file?.readText() != editor.text.toString()) {
+            if (editorViewModel.file?.readText() != binding.editor.text.toString()) {
                 MaterialAlertDialogBuilder(this)
                     .setTitle("Save File")
                     .setMessage("Do you want to save this file before exit?")
                     .setPositiveButton("Yes") { _, _ ->
-                        saveFile(editor.text.toString())
+                        saveFile(binding.editor.text.toString())
                         finish()
                     }
                     .setNegativeButton("No") { _, _ -> finish() }
@@ -218,100 +222,107 @@ class TextEditorActivity : BaseActivity() {
     }
 
     private fun loadEditorPrefs() {
-        editor.setPinLineNumber(PrefsUtils.TextEditor.textEditorPinLineNumber)
-        editor.isWordwrap = PrefsUtils.TextEditor.textEditorWordwrap
-        editor.isLineNumberEnabled = PrefsUtils.TextEditor.textEditorShowLineNumber
-        editor.getComponent(Magnifier::class.java).isEnabled =
-            PrefsUtils.TextEditor.textEditorMagnifier
-        editor.isEditable = !PrefsUtils.TextEditor.textEditorReadOnly
-        editor.getComponent(EditorAutoCompletion::class.java).isEnabled =
-            PrefsUtils.TextEditor.textEditorAutocomplete
+        binding.editor.apply {
+            setPinLineNumber(PrefsUtils.TextEditor.textEditorPinLineNumber)
+            isWordwrap = PrefsUtils.TextEditor.textEditorWordwrap
+            isLineNumberEnabled = PrefsUtils.TextEditor.textEditorShowLineNumber
+            getComponent(Magnifier::class.java).isEnabled =
+                PrefsUtils.TextEditor.textEditorMagnifier
+            isEditable = !PrefsUtils.TextEditor.textEditorReadOnly
+            getComponent(EditorAutoCompletion::class.java).isEnabled =
+                PrefsUtils.TextEditor.textEditorAutocomplete
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val id = item.itemId
-        if (id == R.id.editor_format) {
-            editor.formatCodeAsync()
-        } else if (id == R.id.editor_language_def) {
-            item.isChecked = true
-            editor.setEditorLanguage(null)
-        } else if (id == R.id.editor_language_java) {
-            item.isChecked = true
-            setEditorLanguage(LANGUAGE_JAVA)
-        } else if (id == R.id.editor_language_kotlin) {
-            item.isChecked = true
-            setEditorLanguage(LANGUAGE_KOTLIN)
-        } else if (id == R.id.editor_option_read_only) {
-            item.isChecked = !item.isChecked
-            PrefsUtils.TextEditor.textEditorReadOnly = item.isChecked
-            editor.isEditable = !item.isChecked
-        } else if (id == R.id.editor_option_search) {
-            if (searchPanel.visibility == View.GONE) {
-                searchPanel.visibility = View.VISIBLE
-            } else {
-                searchPanel.visibility = View.GONE
-                editor.searcher.stopSearch()
+        binding.apply {
+            if (id == R.id.editor_format) {
+                editor.formatCodeAsync()
+            } else if (id == R.id.editor_language_def) {
+                item.isChecked = true
+                editor.setEditorLanguage(null)
+            } else if (id == R.id.editor_language_java) {
+                item.isChecked = true
+                setEditorLanguage(LANGUAGE_JAVA)
+            } else if (id == R.id.editor_language_kotlin) {
+                item.isChecked = true
+                setEditorLanguage(LANGUAGE_KOTLIN)
+            } else if (id == R.id.editor_option_read_only) {
+                item.isChecked = !item.isChecked
+                PrefsUtils.TextEditor.textEditorReadOnly = item.isChecked
+                editor.isEditable = !item.isChecked
+            } else if (id == R.id.editor_option_search) {
+                if (searchPanel.visibility == View.GONE) {
+                    searchPanel.visibility = View.VISIBLE
+                } else {
+                    searchPanel.visibility = View.GONE
+                    editor.searcher.stopSearch()
+                }
+            } else if (id == R.id.editor_option_save) {
+                saveFile(editor.text.toString())
+                showMsg("Saved successfully")
+            } else if (id == R.id.editor_option_text_undo) {
+                editor.undo()
+            } else if (id == R.id.editor_option_text_redo) {
+                editor.redo()
+            } else if (id == R.id.editor_option_wordwrap) {
+                item.isChecked = !item.isChecked
+                PrefsUtils.TextEditor.textEditorWordwrap = item.isChecked
+                editor.isWordwrap = item.isChecked
+            } else if (id == R.id.editor_option_magnifier) {
+                item.isChecked = !item.isChecked
+                editor.getComponent(Magnifier::class.java).isEnabled =
+                    item.isChecked
+                PrefsUtils.TextEditor.textEditorMagnifier = item.isChecked
+            } else if (id == R.id.editor_option_line_number) {
+                item.isChecked = !item.isChecked
+                PrefsUtils.TextEditor.textEditorShowLineNumber = item.isChecked
+                editor.isLineNumberEnabled = item.isChecked
+            } else if (id == R.id.editor_option_pin_line_number) {
+                item.isChecked = !item.isChecked
+                PrefsUtils.TextEditor.textEditorPinLineNumber = item.isChecked
+                editor.setPinLineNumber(item.isChecked)
+            } else if (id == R.id.editor_option_autocomplete) {
+                item.isChecked = !item.isChecked
+                PrefsUtils.TextEditor.textEditorAutocomplete = item.isChecked
+                editor.getComponent(EditorAutoCompletion::class.java).isEnabled = item.isChecked
+            } else if (id == R.id.editor_option_smooth_mode) {
+                item.isChecked = !item.isChecked
+                if (item.isChecked) {
+                    editor.setEditorLanguage(EmptyLanguage())
+                } else {
+                    detectLanguage(editorViewModel.file!!)
+                }
             }
-        } else if (id == R.id.editor_option_save) {
-            saveFile(editor.text.toString())
-            showMsg("Saved successfully")
-        } else if (id == R.id.editor_option_text_undo) {
-            editor.undo()
-        } else if (id == R.id.editor_option_text_redo) {
-            editor.redo()
-        } else if (id == R.id.editor_option_wordwrap) {
-            item.isChecked = !item.isChecked
-            PrefsUtils.TextEditor.textEditorWordwrap = item.isChecked
-            editor.isWordwrap = item.isChecked
-        } else if (id == R.id.editor_option_magnifier) {
-            item.isChecked = !item.isChecked
-            editor.getComponent(Magnifier::class.java).isEnabled =
-                item.isChecked
-            PrefsUtils.TextEditor.textEditorMagnifier = item.isChecked
-        } else if (id == R.id.editor_option_line_number) {
-            item.isChecked = !item.isChecked
-            PrefsUtils.TextEditor.textEditorShowLineNumber = item.isChecked
-            editor.isLineNumberEnabled = item.isChecked
-        } else if (id == R.id.editor_option_pin_line_number) {
-            item.isChecked = !item.isChecked
-            PrefsUtils.TextEditor.textEditorPinLineNumber = item.isChecked
-            editor.setPinLineNumber(item.isChecked)
-        } else if (id == R.id.editor_option_autocomplete) {
-            item.isChecked = !item.isChecked
-            PrefsUtils.TextEditor.textEditorAutocomplete = item.isChecked
-            editor.getComponent(EditorAutoCompletion::class.java).isEnabled = item.isChecked
         }
         return super.onOptionsItemSelected(item)
     }
 
     private fun setEditorLanguage(language: Int) {
-        when (language) {
-            LANGUAGE_JAVA -> {
-                editor.apply {
+        binding.editor.apply {
+            when (language) {
+                LANGUAGE_JAVA -> {
                     colorScheme = getColorScheme(false)
                     setEditorLanguage(javaLanguage)
                 }
-            }
-            LANGUAGE_KOTLIN -> {
-                editor.apply {
+
+                LANGUAGE_KOTLIN -> {
                     colorScheme = getColorScheme(true)
                     setEditorLanguage(kotlinLang)
                 }
-            }
-            LANGUAGE_XML -> {
-                editor.apply {
+
+                LANGUAGE_XML -> {
                     colorScheme = getColorScheme(true)
                     setEditorLanguage(xmlLang)
                 }
-            }
-            LANGUAGE_JSON -> {
-                editor.apply {
+
+                LANGUAGE_JSON -> {
                     colorScheme = getColorScheme(true)
                     setEditorLanguage(jsonLang)
                 }
-            }
-            else -> {
-                editor.apply {
+
+                else -> {
                     colorScheme = getColorScheme(false)
                     setEditorLanguage(EmptyLanguage())
                 }
@@ -323,11 +334,11 @@ class TextEditorActivity : BaseActivity() {
         get() = JavaCodeLanguage()
 
     private val jsonLang: Language
-        get() = JsonLanguage((getColorScheme(true) as TextMateColorScheme).themeSource)
+        get() = JsonLanguage()
     private val xmlLang: Language
-        get() = XmlLanguage((getColorScheme(true) as TextMateColorScheme).themeSource)
+        get() = XmlLanguage()
     private val kotlinLang: Language
-        get() = KotlinCodeLanguage((getColorScheme(true) as TextMateColorScheme).themeSource)
+        get() = KotlinCodeLanguage()
 
     private fun getColorScheme(isTextmate: Boolean): EditorColorScheme {
         return if (Utils.isDarkMode) getDarkScheme(isTextmate) else getLightScheme(isTextmate)
@@ -336,13 +347,9 @@ class TextEditorActivity : BaseActivity() {
     private fun getLightScheme(isTextmate: Boolean): EditorColorScheme {
         val scheme: EditorColorScheme = if (isTextmate) {
             try {
-                TextMateColorScheme.create(
-                    IThemeSource.fromInputStream(
-                        assets.open("textmate/light.tmTheme"),
-                        "light.tmTheme",
-                        null
-                    )
-                )
+                ThemeRegistry.getInstance().findThemeByThemeName("QuietLight")?.let {
+                    TextMateColorScheme.create(ThemeModel(it.themeSource))
+                } ?: LightScheme()
             } catch (e: Exception) {
                 Log.e(
                     TAG,
@@ -376,13 +383,9 @@ class TextEditorActivity : BaseActivity() {
     private fun getDarkScheme(isTextmate: Boolean): EditorColorScheme {
         val scheme: EditorColorScheme = if (isTextmate) {
             try {
-                TextMateColorScheme.create(
-                    IThemeSource.fromInputStream(
-                        assets.open("textmate/dark.json"),
-                        "dark.json",
-                        null
-                    )
-                )
+                ThemeRegistry.getInstance().findThemeByThemeName("darcula")?.let {
+                    TextMateColorScheme.create(ThemeModel(it.themeSource))
+                } ?: DarkScheme()
             } catch (e: Exception) {
                 Log.e(
                     TAG,

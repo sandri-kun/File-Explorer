@@ -1,18 +1,14 @@
 package com.raival.fileexplorer.activity.editor.language.java
 
 import io.github.rosemoe.sora.lang.format.Formatter
-import io.github.rosemoe.sora.lang.smartEnter.NewlineHandleResult
-import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.langs.java.JavaTextTokenizer
 import io.github.rosemoe.sora.langs.java.Tokens
 import io.github.rosemoe.sora.text.ContentReference
-import io.github.rosemoe.sora.text.TextUtils
 
 open class JavaCodeLanguage : JavaLanguage() {
 
     private val javaFormatter = JavaFormatter()
-    private val newlineHandlers = arrayOf<NewlineHandler>(BraceHandler())
 
     override fun getFormatter(): Formatter {
         return javaFormatter
@@ -55,35 +51,5 @@ open class JavaCodeLanguage : JavaLanguage() {
 
         if (advance > 0) return 4
         return 0
-    }
-
-    override fun getNewlineHandlers(): Array<NewlineHandler> {
-        return newlineHandlers
-    }
-
-    inner class BraceHandler : NewlineHandler {
-        override fun matchesRequirement(beforeText: String, afterText: String): Boolean {
-            return (beforeText.endsWith("{") && afterText.startsWith("}"))
-                    || (beforeText.endsWith("(") && afterText.startsWith(")"))
-        }
-
-        override fun handleNewline(
-            beforeText: String,
-            afterText: String,
-            tabSize: Int
-        ): NewlineHandleResult {
-            val count: Int = TextUtils.countLeadingSpaceCount(beforeText, tabSize)
-            val advanceBefore: Int = getIndentAdvance(beforeText)
-            val advanceAfter: Int = getIndentAdvance(afterText)
-            var text: String
-            val sb: StringBuilder = StringBuilder("\n")
-                .append(TextUtils.createIndent(count + advanceBefore, tabSize, useTab()))
-                .append('\n')
-                .append(
-                    TextUtils.createIndent(count + advanceAfter, tabSize, useTab())
-                        .also { text = it })
-            val shiftLeft = text.length + 1
-            return NewlineHandleResult(sb, shiftLeft)
-        }
     }
 }

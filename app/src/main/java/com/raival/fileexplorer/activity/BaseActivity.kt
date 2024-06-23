@@ -8,9 +8,14 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
+import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
+import androidx.viewbinding.ViewBinding
 import com.bumptech.glide.Glide
 import com.google.android.material.elevation.SurfaceColors
 import com.raival.fileexplorer.App
@@ -21,7 +26,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-abstract class BaseActivity : AppCompatActivity() {
+abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
+
+    protected open lateinit var binding: T
+
+    abstract fun getViewBinding(): T
+
     @JvmField
     protected var currentTheme: String = PrefsUtils.Settings.themeMode
 
@@ -29,14 +39,33 @@ abstract class BaseActivity : AppCompatActivity() {
      * This method is called after checking storage permissions
      */
     open fun init() {}
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = getViewBinding()
+        setContentView(binding.root)
         if (currentTheme == SettingsActivity.THEME_MODE_DARK) {
             setTheme(R.style.Theme_FileExplorer_Dark)
         } else if (currentTheme == SettingsActivity.THEME_MODE_LIGHT) {
             setTheme(R.style.Theme_FileExplorer_Light)
         }
-        super.onCreate(savedInstanceState)
         window.statusBarColor = SurfaceColors.SURFACE_2.getColor(this)
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, windowInsets ->
+            val imeInset =
+                ViewCompat.getRootWindowInsets(view)!!.getInsets(WindowInsetsCompat.Type.ime())
+
+            val systemBarInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+            view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                leftMargin = systemBarInsets.left
+                rightMargin = systemBarInsets.right
+                topMargin = systemBarInsets.top
+                bottomMargin = if (imeInset.bottom > 0) 0 else systemBarInsets.bottom
+            }
+
+            WindowInsetsCompat.CONSUMED
+        }
     }
 
     protected fun checkPermissions() {

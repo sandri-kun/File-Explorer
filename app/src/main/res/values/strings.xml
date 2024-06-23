@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">File Explorer</string>
+    <string name="no_tasks_found">No Tasks Found</string>
+    <string name="available_tasks">Available Tasks</string>
+    <string name="audio_player">Audio Player</string>
+    <string name="no_audio_file_selected">No Audio File Selected</string>
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="close">Close</string>
 </resources>

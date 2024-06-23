@@ -62,7 +62,7 @@ class ApkResolver {
     }
 
     private fun isSignedBySystem(piApp: PackageInfo?, piSys: PackageInfo?): Boolean {
-        return piApp != null && piSys != null && piApp.signatures != null && piSys.signatures[0] == piApp.signatures[0]
+        return piApp != null && piSys != null && piApp.signatures != null && piSys.signatures!![0] == piApp.signatures!![0]
     }
 
     companion object {

@@ -1,42 +1,33 @@
 package com.raival.fileexplorer.activity
 
 import android.os.Bundle
-import android.view.View
-import android.widget.TextView
-import androidx.appcompat.widget.SwitchCompat
-import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.slider.Slider
-import com.raival.fileexplorer.R
 import com.raival.fileexplorer.common.dialog.CustomDialog
 import com.raival.fileexplorer.common.dialog.OptionsDialog
+import com.raival.fileexplorer.databinding.SettingsActivityBinding
 import com.raival.fileexplorer.tab.file.misc.FileUtils
 import com.raival.fileexplorer.util.PrefsUtils
+import com.raival.fileexplorer.util.PrefsUtils.Settings.showBottomToolbarLabels
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class SettingsActivity : BaseActivity() {
-    private lateinit var logModeValue: TextView
-    private lateinit var themeModeValue: TextView
-    private lateinit var deepSearchSizeLimitValue: TextView
-    private lateinit var showBottomToolbarLabels: SwitchCompat
+class SettingsActivity : BaseActivity<SettingsActivityBinding>() {
+    override fun getViewBinding() = SettingsActivityBinding.inflate(layoutInflater)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.settings_activity)
 
-        val materialToolbar = findViewById<MaterialToolbar>(R.id.toolbar)
-        setSupportActionBar(materialToolbar)
+        setSupportActionBar(binding.toolbar)
         supportActionBar?.title = "Settings"
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         supportActionBar!!.setHomeButtonEnabled(true)
-        materialToolbar.setNavigationOnClickListener { onBackPressed() }
+        binding.toolbar.setNavigationOnClickListener { onBackPressed() }
 
-        themeModeValue = findViewById(R.id.settings_theme_value)
-        themeModeValue.text = PrefsUtils.Settings.themeMode
+        binding.settingsThemeValue.text = PrefsUtils.Settings.themeMode
 
-        findViewById<View>(R.id.settings_theme).setOnClickListener {
+        binding.settingsTheme.setOnClickListener {
             OptionsDialog("Select theme mode")
                 .addOption(
                     label = THEME_MODE_AUTO,
@@ -56,16 +47,15 @@ class SettingsActivity : BaseActivity() {
                 .show(supportFragmentManager, "")
         }
 
-        showBottomToolbarLabels = findViewById(R.id.settings_bottom_toolbar_labels_value)
-        showBottomToolbarLabels.isChecked = PrefsUtils.Settings.showBottomToolbarLabels
-        findViewById<View>(R.id.settings_bottom_toolbar_labels).setOnClickListener {
-            showBottomToolbarLabels.isChecked = !showBottomToolbarLabels.isChecked
-            PrefsUtils.Settings.showBottomToolbarLabels = showBottomToolbarLabels.isChecked
+        binding.settingsBottomToolbarLabelsValue.isChecked = showBottomToolbarLabels
+        binding.settingsBottomToolbarLabels.setOnClickListener {
+            binding.settingsBottomToolbarLabelsValue.isChecked =
+                !binding.settingsBottomToolbarLabelsValue.isChecked
+            showBottomToolbarLabels = binding.settingsBottomToolbarLabelsValue.isChecked
         }
 
-        logModeValue = findViewById(R.id.settings_log_mode_value)
-        logModeValue.text = PrefsUtils.Settings.logMode
-        findViewById<View>(R.id.settings_log_mode).setOnClickListener {
+        binding.settingsLogModeValue.text = PrefsUtils.Settings.logMode
+        binding.settingsLogMode.setOnClickListener {
             OptionsDialog("Select log mode")
                 .addOption(LOG_MODE_DISABLE, { setLogMode(LOG_MODE_DISABLE) }, true)
                 .addOption(
@@ -77,12 +67,11 @@ class SettingsActivity : BaseActivity() {
                 .show(supportFragmentManager, "")
         }
 
-        deepSearchSizeLimitValue = findViewById(R.id.settings_deep_search_limit_value)
-        deepSearchSizeLimitValue.text = FileUtils.getFormattedSize(
+        binding.settingsDeepSearchLimitValue.text = FileUtils.getFormattedSize(
             PrefsUtils.Settings.deepSearchFileSizeLimit,
             "%.0f"
         )
-        findViewById<View>(R.id.settings_deep_search_limit).setOnClickListener {
+        binding.settingsDeepSearchLimit.setOnClickListener {
             val seekBar = Slider(this).apply {
                 valueFrom = 0f
                 valueTo = 80f
@@ -101,7 +90,7 @@ class SettingsActivity : BaseActivity() {
                 .setPositiveButton("Save", {
                     PrefsUtils.Settings.deepSearchFileSizeLimit =
                         seekBar.value.toLong() * 1024 * 1024
-                    deepSearchSizeLimitValue.text = FileUtils.getFormattedSize(
+                    binding.settingsDeepSearchLimitValue.text = FileUtils.getFormattedSize(
                         PrefsUtils.Settings.deepSearchFileSizeLimit,
                         "%.0f"
                     )
@@ -120,12 +109,12 @@ class SettingsActivity : BaseActivity() {
     }
 
     private fun setLogMode(mode: String) {
-        logModeValue.text = mode
+        binding.settingsLogModeValue.text = mode
         PrefsUtils.Settings.logMode = mode
     }
 
     private fun setThemeMode(mode: String) {
-        themeModeValue.text = mode
+        binding.settingsThemeValue.text = mode
         PrefsUtils.Settings.themeMode = mode
         CoroutineScope(Dispatchers.Main).launch {
             delay(150)

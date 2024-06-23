@@ -34,7 +34,7 @@
                     </dict>
                 </dict>
                 <key>match</key>
-                <string>^\s*(package)\b(?:\s*([^ ;$]+)\s*)?</string>
+                <string>\b(package)\b</string>
             </dict>
             <dict>
                 <key>captures</key>
@@ -43,6 +43,21 @@
                     <dict>
                         <key>name</key>
                         <string>keyword.other.import.kotlin</string>
+                    </dict>
+                    <key>2</key>
+                    <dict>
+                        <key>name</key>
+                        <string>storage.modifier.import.java</string>
+                    </dict>
+                    <key>3</key>
+                    <dict>
+                        <key>name</key>
+                        <string>keyword.other.kotlin</string>
+                    </dict>
+                    <key>4</key>
+                    <dict>
+                        <key>name</key>
+                        <string>entity.name.type</string>
                     </dict>
                 </dict>
                 <key>match</key>
@@ -653,6 +668,37 @@
                         </dict>
                         <key>end</key>
                         <string>"</string>
+                        <key>endCaptures</key>
+                        <dict>
+                            <key>0</key>
+                            <dict>
+                                <key>name</key>
+                                <string>punctuation.definition.string.end.kotlin</string>
+                            </dict>
+                        </dict>
+                        <key>name</key>
+                        <string>string.quoted.double.kotlin</string>
+                        <key>patterns</key>
+                        <array>
+                            <dict>
+                                <key>include</key>
+                                <string>#string-content</string>
+                            </dict>
+                        </array>
+                    </dict>
+                    <dict>
+                        <key>begin</key>
+                        <string>'</string>
+                        <key>beginCaptures</key>
+                        <dict>
+                            <key>0</key>
+                            <dict>
+                                <key>name</key>
+                                <string>punctuation.definition.string.begin.kotlin</string>
+                            </dict>
+                        </dict>
+                        <key>end</key>
+                        <string>'</string>
                         <key>endCaptures</key>
                         <dict>
                             <key>0</key>

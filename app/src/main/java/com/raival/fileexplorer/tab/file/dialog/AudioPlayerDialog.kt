@@ -1,0 +1,100 @@
+package com.raival.fileexplorer.tab.file.dialog
+
+import android.media.MediaPlayer
+import android.net.Uri
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.lifecycle.ViewModelProvider
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.raival.fileexplorer.R
+import com.raival.fileexplorer.activity.model.MainViewModel
+import com.raival.fileexplorer.databinding.AudioPlayerFragmentBinding
+import java.io.File
+
+class AudioPlayerDialog(private val audioFile: File) :
+    BottomSheetDialogFragment() {
+
+    private lateinit var mainViewModel: MainViewModel
+    private lateinit var binding: AudioPlayerFragmentBinding
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        binding = AudioPlayerFragmentBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        mainViewModel = ViewModelProvider(requireActivity()).get(MainViewModel::class.java)
+
+        val mediaPlayer = MediaPlayer.create(requireContext(), Uri.fromFile(audioFile))
+        mediaPlayer.start()
+
+        binding.audioFile.text = audioFile.name
+
+        binding.slider.valueTo = mediaPlayer.duration.toFloat()
+        binding.slider.setLabelFormatter { value: Float ->
+            getDurationString(value.toInt() / 1000)
+        }
+        binding.slider.addOnChangeListener { _, value, _ ->
+            mediaPlayer.seekTo(value.toInt())
+            binding.progress.text = getDurationString(value.toInt() / 1000)
+        }
+
+        Handler(Looper.getMainLooper()).post(object : Runnable {
+            override fun run() {
+                if (mediaPlayer.isPlaying) {
+                    binding.slider.value = mediaPlayer.currentPosition.toFloat()
+                    Handler(Looper.getMainLooper()).postDelayed(this, 1000)
+                }
+            }
+        })
+
+        binding.pause.setOnClickListener {
+            if (mediaPlayer.isPlaying) {
+                mediaPlayer.pause()
+                binding.pause.setText(R.string.play)
+            } else {
+                mediaPlayer.start()
+                binding.pause.setText(R.string.pause)
+                Handler(Looper.getMainLooper()).post(object : Runnable {
+                    override fun run() {
+                        if (mediaPlayer.isPlaying) {
+                            binding.slider.value = mediaPlayer.currentPosition.toFloat()
+                            Handler(Looper.getMainLooper()).postDelayed(this, 1000)
+                        }
+                    }
+                })
+            }
+        }
+
+        binding.close.setOnClickListener {
+            mediaPlayer.stop()
+            mediaPlayer.release()
+            dismiss()
+        }
+    }
+
+    private fun getDurationString(duration: Int): String {
+        val hours = duration / 3600
+        val minutes = (duration % 3600) / 60
+        val seconds = duration % 60
+        return if (hours > 0) {
+            "${hours}:${minutes}:${seconds}"
+        } else {
+            "${minutes}:${seconds}"
+        }
+    }
+
+    override fun getTheme(): Int {
+        return R.style.ThemeOverlay_Material3_BottomSheetDialog
+    }
+
+}

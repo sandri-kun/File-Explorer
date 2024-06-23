@@ -5,6 +5,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.raival.fileexplorer.activity.MainActivity
 import com.raival.fileexplorer.activity.TextEditorActivity
 import com.raival.fileexplorer.extension.openFileWith
+import com.raival.fileexplorer.tab.file.dialog.AudioPlayerDialog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -25,6 +26,10 @@ class FileOpener(private val mainActivity: MainActivity) {
             intent.setClass(mainActivity, TextEditorActivity::class.java)
             intent.putExtra("file", file.absolutePath)
             mainActivity.startActivity(intent)
+            return true
+        }
+        if (FileMimeTypes.audioType.contains(file.extension.lowercase())) {
+            AudioPlayerDialog(file).show(mainActivity.supportFragmentManager, "audio_player")
             return true
         }
         if (file.extension == FileMimeTypes.apkType) {
