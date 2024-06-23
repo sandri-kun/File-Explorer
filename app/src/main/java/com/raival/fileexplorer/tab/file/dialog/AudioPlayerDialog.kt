@@ -1,5 +1,6 @@
 package com.raival.fileexplorer.tab.file.dialog
 
+import android.media.MediaMetadataRetriever
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
@@ -14,6 +15,7 @@ import com.raival.fileexplorer.R
 import com.raival.fileexplorer.activity.model.MainViewModel
 import com.raival.fileexplorer.databinding.AudioPlayerFragmentBinding
 import java.io.File
+import java.lang.Float.min
 
 class AudioPlayerDialog(private val audioFile: File) :
     BottomSheetDialogFragment() {
@@ -34,12 +36,18 @@ class AudioPlayerDialog(private val audioFile: File) :
         super.onViewCreated(view, savedInstanceState)
         mainViewModel = ViewModelProvider(requireActivity()).get(MainViewModel::class.java)
 
+        val metadata = MediaMetadataRetriever()
+        metadata.setDataSource(audioFile.absolutePath)
+
+        val duration =
+            metadata.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)!!.toFloat()
+
         val mediaPlayer = MediaPlayer.create(requireContext(), Uri.fromFile(audioFile))
         mediaPlayer.start()
 
         binding.audioFile.text = audioFile.name
 
-        binding.slider.valueTo = mediaPlayer.duration.toFloat()
+        binding.slider.valueTo = duration
         binding.slider.setLabelFormatter { value: Float ->
             getDurationString(value.toInt() / 1000)
         }
@@ -51,19 +59,27 @@ class AudioPlayerDialog(private val audioFile: File) :
         Handler(Looper.getMainLooper()).post(object : Runnable {
             override fun run() {
                 if (mediaPlayer.isPlaying) {
-                    binding.slider.value = mediaPlayer.currentPosition.toFloat()
+                    binding.slider.value = min(mediaPlayer.currentPosition.toFloat(), duration)
                     Handler(Looper.getMainLooper()).postDelayed(this, 1000)
                 }
             }
         })
+
+        mediaPlayer.setOnCompletionListener {
+            binding.pause.setText(R.string.play)
+        }
 
         binding.pause.setOnClickListener {
             if (mediaPlayer.isPlaying) {
                 mediaPlayer.pause()
                 binding.pause.setText(R.string.play)
             } else {
+                if (binding.slider.value == duration) {
+                    mediaPlayer.seekTo(0)
+                }
                 mediaPlayer.start()
                 binding.pause.setText(R.string.pause)
+
                 Handler(Looper.getMainLooper()).post(object : Runnable {
                     override fun run() {
                         if (mediaPlayer.isPlaying) {

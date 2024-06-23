@@ -14,13 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "sora-editor"
-include(
-    ":bom",
-    ":editor",
-    ":app",
-    ":language-java",
-    ":language-textmate",
-    ":editor-lsp",
-    ":language-treesitter"
-)
+rootProject.name = "File Explorer"
+include(":app")

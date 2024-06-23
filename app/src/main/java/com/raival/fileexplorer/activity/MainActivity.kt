@@ -135,7 +135,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        drawer = ActivityMainDrawerBinding.inflate(layoutInflater)
+        drawer = binding.drawerLayout
 
         bottomBarView = binding.bottomBarView
         toolbar = binding.toolbar
@@ -296,7 +296,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         drawer.toolbar.apply {
             setTitle(R.string.app_name)
             subtitle = LINK
-            menu.apply {
+            drawer.toolbar.menu.apply {
                 clear()
                 add("GitHub")
                     .setOnMenuItemClickListener { openGithubPage() }
