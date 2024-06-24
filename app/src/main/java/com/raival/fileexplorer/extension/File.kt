@@ -98,6 +98,7 @@ fun File.openFileWith(anonymous: Boolean) {
         App.appContext, App.appContext.packageName + ".provider",
         this
     )
+
     i.setDataAndType(uri, if (anonymous) "*/*" else getMimeTypeFromFile())
     i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)

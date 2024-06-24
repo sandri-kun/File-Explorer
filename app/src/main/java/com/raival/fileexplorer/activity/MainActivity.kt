@@ -3,8 +3,12 @@ package com.raival.fileexplorer.activity
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
+import android.os.Build.VERSION
+import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import android.os.Environment
+import android.os.storage.StorageManager
+import android.os.storage.StorageVolume
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -29,6 +33,7 @@ import com.raival.fileexplorer.common.view.TabView
 import com.raival.fileexplorer.common.view.TabView.OnUpdateTabViewListener
 import com.raival.fileexplorer.databinding.ActivityMainBinding
 import com.raival.fileexplorer.databinding.ActivityMainDrawerBinding
+import com.raival.fileexplorer.databinding.StorageDeviceItemBinding
 import com.raival.fileexplorer.extension.getAvailableMemoryBytes
 import com.raival.fileexplorer.extension.getShortLabel
 import com.raival.fileexplorer.extension.getTotalMemoryBytes
@@ -50,6 +55,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
+import java.lang.reflect.InvocationTargetException
+
 
 class MainActivity : BaseActivity<ActivityMainBinding>() {
     private var confirmExit = false
@@ -309,8 +316,57 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             }
         }
 
-        updateStorageSpace()
-        updateRootSpace()
+        addStorageSpace("Root Directory", Environment.getRootDirectory())
+        addStorageSpace("Storage Directory", Environment.getExternalStorageDirectory())
+        val storageManager = getSystemService(StorageManager::class.java)!!
+        storageManager.storageVolumes.forEach { volume ->
+            if (volume.isRemovable)
+                addStorageSpace(volume.getDescription(this), getVolumePath(volume))
+        }
+    }
+
+
+    fun getVolumePath(storageVolume: StorageVolume): File {
+        if (VERSION.SDK_INT >= VERSION_CODES.R) return storageVolume.directory!!
+        try {
+            val storageVolumeClazz: Class<*> = StorageVolume::class.java
+            val getPath = storageVolumeClazz.getMethod("getPathFile")
+            return getPath.invoke(storageVolume) as File
+        } catch (e: NoSuchMethodException) {
+            e.printStackTrace()
+        } catch (e: IllegalAccessException) {
+            e.printStackTrace()
+        } catch (e: InvocationTargetException) {
+            e.printStackTrace()
+        }
+        return File("/mnt/" + storageVolume.uuid)
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun addStorageSpace(name: String, root: File) {
+        val storageDeviceItemBinding = StorageDeviceItemBinding.inflate(layoutInflater)
+
+        storageDeviceItemBinding.storageSpaceTitle.text = name
+
+        val used = root.getUsedMemoryBytes()
+        val total = root.getTotalMemoryBytes()
+        val available = root.getAvailableMemoryBytes()
+        storageDeviceItemBinding.storageSpaceProgress.progress =
+            (used.toDouble() / total.toDouble() * 100).toInt()
+        storageDeviceItemBinding.storageSpace.text = (FileUtils.getFormattedSize(used)
+                + " used, "
+                + FileUtils.getFormattedSize(available)
+                + " available")
+
+        storageDeviceItemBinding.root.setOnClickListener {
+
+            addNewTab(
+                FileExplorerTabFragment(root),
+                BaseTabFragment.FILE_EXPLORER_TAB_FRAGMENT_PREFIX + generateRandomTag()
+            )
+            binding.drawer.close()
+        }
+        drawer.storageSpaces.addView(storageDeviceItemBinding.root)
     }
 
     private fun openSettings(): Boolean {
@@ -321,32 +377,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     private fun openGithubPage(): Boolean {
         startActivity(Intent(Intent.ACTION_VIEW).setData(Uri.parse(LINK)))
         return true
-    }
-
-    @SuppressLint("SetTextI18n")
-    private fun updateRootSpace() {
-        val used = Environment.getRootDirectory().getUsedMemoryBytes()
-        val total = Environment.getRootDirectory().getTotalMemoryBytes()
-        val available = Environment.getRootDirectory().getAvailableMemoryBytes()
-
-        drawer.storageSpaceProgress.progress = (used.toDouble() / total.toDouble() * 100).toInt()
-        drawer.storageSpace.text = (FileUtils.getFormattedSize(used)
-                + " used, "
-                + FileUtils.getFormattedSize(available)
-                + " available")
-    }
-
-    @SuppressLint("SetTextI18n")
-    private fun updateStorageSpace() {
-        val used = Environment.getExternalStorageDirectory().getUsedMemoryBytes()
-        val total = Environment.getExternalStorageDirectory().getTotalMemoryBytes()
-        val available = Environment.getExternalStorageDirectory().getAvailableMemoryBytes()
-
-        drawer.storageSpaceProgress.progress = (used.toDouble() / total.toDouble() * 100).toInt()
-        drawer.storageSpace.text = (FileUtils.getFormattedSize(used)
-                + " used, "
-                + FileUtils.getFormattedSize(available)
-                + " available")
     }
 
     fun addNewTab(fragment: BaseTabFragment, tag: String) {

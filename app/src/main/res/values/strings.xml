@@ -14,4 +14,5 @@
     <string name="regex">Regex</string>
     <string name="case_sensitive">Case Sensitive</string>
     <string name="word">Word</string>
+    <string name="storage_space">Storage Space</string>
 </resources>

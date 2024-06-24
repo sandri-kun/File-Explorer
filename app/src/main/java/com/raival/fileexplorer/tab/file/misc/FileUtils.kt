@@ -371,15 +371,15 @@ A file with the same name exists."""
     }
 
     fun getFormattedSize(length: Long, format: String): String {
-        if (length > 1073741824) return String.format(
+        if (length > (1024 * 1024 * 1024)) return String.format(
             Locale.ENGLISH,
             format,
-            length.toFloat() / 1073741824
+            length.toFloat() / (1024 * 1024 * 1024)
         ) + "GB"
         if (length > 1048576) return String.format(
             Locale.ENGLISH,
             format,
-            length.toFloat() / 1048576
+            length.toFloat() / (1024 * 1024)
         ) + "MB"
         return if (length > 1024) String.format(
             Locale.ENGLISH,

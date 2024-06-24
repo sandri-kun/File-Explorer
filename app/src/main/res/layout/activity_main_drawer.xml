@@ -34,94 +34,12 @@
 
         <!-- Storage Directory -->
         <LinearLayout
+            android:id="@+id/storage_spaces"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
             android:clickable="true"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <com.google.android.material.imageview.ShapeableImageView
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_marginEnd="12dp"
-                android:src="@drawable/ic_baseline_folder_open_24" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <com.google.android.material.textview.MaterialTextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingVertical="2dp"
-                    android:text="@string/storage_directory"
-                    android:textSize="14sp" />
-
-                <com.google.android.material.progressindicator.LinearProgressIndicator
-                    android:id="@+id/storage_space_progress"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingVertical="2dp"
-                    android:progress="50"
-                    app:trackCornerRadius="16dp" />
-
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/storage_space"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:alpha="0.7"
-                    android:paddingVertical="2dp"
-                    android:textSize="10sp" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- Root Directory -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:clickable="true"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <com.google.android.material.imageview.ShapeableImageView
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_marginEnd="12dp"
-                android:src="@drawable/ic_baseline_folder_open_24" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <com.google.android.material.textview.MaterialTextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingVertical="2dp"
-                    android:text="@string/root_directory"
-                    android:textSize="14sp" />
-
-                <com.google.android.material.progressindicator.LinearProgressIndicator
-                    android:id="@+id/root_space_progress"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingVertical="2dp"
-                    android:progress="88"
-                    app:trackCornerRadius="16dp" />
-
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/root_space"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:alpha="0.7"
-                    android:paddingVertical="2dp"
-                    android:textSize="10sp" />
-            </LinearLayout>
-        </LinearLayout>
+            android:orientation="vertical" />
 
         <com.google.android.material.textview.MaterialTextView
             android:layout_width="match_parent"

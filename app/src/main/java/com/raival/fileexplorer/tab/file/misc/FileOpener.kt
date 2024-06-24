@@ -2,6 +2,7 @@ package com.raival.fileexplorer.tab.file.misc
 
 import android.content.Intent
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.raival.fileexplorer.activity.ImageViewerActivity
 import com.raival.fileexplorer.activity.MainActivity
 import com.raival.fileexplorer.activity.TextEditorActivity
@@ -15,7 +16,15 @@ import java.io.File
 class FileOpener(private val mainActivity: MainActivity) {
     fun openFile(file: File) {
         if (!handleKnownFileExtensions(file)) {
-            file.openFileWith(false)
+            try {
+                file.openFileWith(false)
+            } catch (e: Throwable) {
+                Snackbar.make(
+                    mainActivity.bottomBarView,
+                    "Cannot read this file",
+                    Snackbar.LENGTH_SHORT
+                ).show()
+            }
         }
     }
 
