@@ -60,6 +60,7 @@ dependencies {
     implementation("com.google.android.material:material:1.13.0-alpha03")
     implementation("com.google.code.gson:gson:2.11.0")
     implementation("commons-io:commons-io:2.16.1")
+    implementation("com.jsibbold:zoomage:1.3.1")
 
     implementation("com.github.bumptech.glide:glide:5.0.0-rc01")
     annotationProcessor("com.github.bumptech.glide:compiler:5.0.0-rc01")
@@ -68,7 +69,7 @@ dependencies {
     implementation("net.lingala.zip4j:zip4j:2.11.5")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0-RC")
-    implementation(platform("io.github.Rosemoe.sora-editor:bom:0.23.4"))
+    implementation(platform("io.github.Rosemoe.sora-editor:bom:0.23.4-43e1706-SNAPSHOT"))
 
     implementation("io.github.Rosemoe.sora-editor:editor")
     implementation("io.github.Rosemoe.sora-editor:language-textmate")

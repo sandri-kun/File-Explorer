@@ -2,6 +2,7 @@ package com.raival.fileexplorer.tab.file.misc
 
 import android.content.Intent
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.raival.fileexplorer.activity.ImageViewerActivity
 import com.raival.fileexplorer.activity.MainActivity
 import com.raival.fileexplorer.activity.TextEditorActivity
 import com.raival.fileexplorer.extension.openFileWith
@@ -24,6 +25,13 @@ class FileOpener(private val mainActivity: MainActivity) {
         ) {
             val intent = Intent()
             intent.setClass(mainActivity, TextEditorActivity::class.java)
+            intent.putExtra("file", file.absolutePath)
+            mainActivity.startActivity(intent)
+            return true
+        }
+        if (FileMimeTypes.imageType.contains(file.extension.lowercase())) {
+            val intent = Intent()
+            intent.setClass(mainActivity, ImageViewerActivity::class.java)
             intent.putExtra("file", file.absolutePath)
             mainActivity.startActivity(intent)
             return true

@@ -61,7 +61,7 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
                 leftMargin = systemBarInsets.left
                 rightMargin = systemBarInsets.right
                 topMargin = systemBarInsets.top
-                bottomMargin = if (imeInset.bottom > 0) 0 else systemBarInsets.bottom
+                bottomMargin = if (imeInset.bottom > 0) imeInset.bottom else systemBarInsets.bottom
             }
 
             WindowInsetsCompat.CONSUMED

@@ -10,6 +10,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.view.menu.MenuBuilder
+import androidx.appcompat.widget.PopupMenu
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -47,13 +48,14 @@ import java.util.Locale
 
 class TextEditorActivity : BaseActivity<TextEditorActivityBinding>() {
     private lateinit var editorViewModel: TextEditorViewModel
+    private var searchOptions = SearchOptions(false, false)
 
     override fun getViewBinding() = TextEditorActivityBinding.inflate(layoutInflater)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        editorViewModel = ViewModelProvider(this).get(TextEditorViewModel::class.java)
+        editorViewModel = ViewModelProvider(this)[TextEditorViewModel::class.java]
 
         setupSearchPanel()
 
@@ -147,10 +149,14 @@ class TextEditorActivity : BaseActivity<TextEditorActivityBinding>() {
             override fun onTextChanged(charSequence: CharSequence, i: Int, i1: Int, i2: Int) {}
             override fun afterTextChanged(editable: Editable) {
                 if (editable.isNotEmpty()) {
-                    binding.editor.searcher.search(
-                        editable.toString(),
-                        SearchOptions(false, false)
-                    )
+                    try {
+                        binding.editor.searcher.search(
+                            editable.toString(),
+                            searchOptions
+                        )
+                    } catch (e: Exception) {
+                        Log.e(TAG, Log.UNABLE_TO + " search text in editor", e)
+                    }
                 } else {
                     binding.editor.searcher.stopSearch()
                 }
@@ -160,7 +166,7 @@ class TextEditorActivity : BaseActivity<TextEditorActivityBinding>() {
             binding.next.setOnClickListener { if (binding.editor.searcher.hasQuery()) binding.editor.searcher.gotoNext() }
             binding.previous.setOnClickListener { if (binding.editor.searcher.hasQuery()) binding.editor.searcher.gotoPrevious() }
             binding.replace.setOnClickListener {
-                if (binding.editor.searcher.hasQuery()) binding.editor.searcher.replaceThis(
+                if (binding.editor.searcher.hasQuery()) binding.editor.searcher.replaceCurrentMatch(
                     binding.replaceInput.text.toString()
                 )
             }
@@ -169,10 +175,56 @@ class TextEditorActivity : BaseActivity<TextEditorActivityBinding>() {
                     binding.replaceInput.text.toString()
                 )
             }
+            binding.more.setOnClickListener {
+                showSearchMenu()
+            }
         }
     }
 
-    public override fun onStop() {
+    private fun showSearchMenu() {
+        val popup = PopupMenu(this, binding.more)
+        popup.menuInflater.inflate(R.menu.text_editor_find_menu, popup.menu)
+
+        if (searchOptions.caseInsensitive) {
+            popup.menu.findItem(R.id.search_option_case_sensitive).isChecked = true
+        }
+        if (searchOptions.type == SearchOptions.TYPE_REGULAR_EXPRESSION) {
+            popup.menu.findItem(R.id.search_option_regex).isChecked = true
+        }
+
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.search_option_case_sensitive -> {
+                    item.isChecked = !item.isChecked
+                    searchOptions = SearchOptions(searchOptions.type, item.isChecked)
+                }
+
+                R.id.search_option_word -> {
+                    item.isChecked = !item.isChecked
+                    searchOptions =
+                        SearchOptions(SearchOptions.TYPE_WHOLE_WORD, searchOptions.caseInsensitive)
+                }
+
+                R.id.search_option_regex -> {
+                    item.isChecked = !item.isChecked
+                    searchOptions = SearchOptions(
+                        SearchOptions.TYPE_REGULAR_EXPRESSION,
+                        searchOptions.caseInsensitive
+                    )
+                }
+
+                R.id.close -> {
+                    binding.searchPanel.visibility = View.GONE
+                    binding.editor.searcher.stopSearch()
+                    return@setOnMenuItemClickListener true
+                }
+            }
+            return@setOnMenuItemClickListener false
+        }
+        popup.show()
+    }
+
+    override fun onStop() {
         super.onStop()
         editorViewModel.content = binding.editor.text
     }

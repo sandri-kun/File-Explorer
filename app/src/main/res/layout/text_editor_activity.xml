@@ -128,6 +128,13 @@
                     android:layout_margin="3dp"
                     android:layout_weight="1"
                     android:text="Next" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/more"
+                    style="@style/Widget.Material3.Button.IconButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/baseline_more_vert_24" />
             </LinearLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

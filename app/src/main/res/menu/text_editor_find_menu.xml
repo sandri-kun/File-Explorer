@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/search_option_case_sensitive"
+        android:checkable="true"
+        android:title="@string/case_sensitive" />
+    <item
+        android:id="@+id/search_option_word"
+        android:checkable="true"
+        android:title="@string/word" />
+    <item
+        android:id="@+id/search_option_regex"
+        android:checkable="true"
+        android:title="@string/regex" />
+    <item
+        android:id="@+id/close"
+        android:title="@string/close" />
+</menu>
