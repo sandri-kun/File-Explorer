@@ -325,7 +325,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
     }
 
-
     fun getVolumePath(storageVolume: StorageVolume): File {
         if (VERSION.SDK_INT >= VERSION_CODES.R) return storageVolume.directory!!
         try {

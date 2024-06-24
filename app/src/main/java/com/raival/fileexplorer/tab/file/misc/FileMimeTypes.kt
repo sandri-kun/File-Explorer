@@ -25,7 +25,7 @@ object FileMimeTypes {
     val fontType = arrayOf("ttf", "otf")
 
     @JvmField
-    val audioType = arrayOf("mp3", "4mp", "aup", "ogg", "3ga", "m4b", "wav", "acc", "m4a")
+    val audioType = arrayOf("mp3", "4mp", "aup", "ogg", "3ga", "m4b", "wav", "acc", "aac", "m4a")
 
     @JvmField
     val videoType = arrayOf("mp4", "mov", "avi", "mkv", "wmv", "m4v", "3gp", "webm")
@@ -37,10 +37,12 @@ object FileMimeTypes {
     val textType = arrayOf("txt", "text", "log", "dsc", "apt", "rtf", "rtx")
 
     @JvmField
-    val codeType = arrayOf(javaType, xmlType, "py", "css", kotlinType, "cs", "xml", "json")
+    val codeType =
+        arrayOf(javaType, xmlType, "py", "css", kotlinType, "cs", "xml", "json", "sh", "js")
 
     @JvmField
-    val imageType = arrayOf("png", "jpeg", "jpg", "heic", "tiff", "gif", "webp", svgType, "bmp")
+    val imageType =
+        arrayOf("png", "jpeg", "jpg", "heic", "tiff", "gif", "webp", svgType, "bmp", "ico")
 
     val mimeTypes = HashMap<String, String>().apply {
         put("asm", "text/x-asm");

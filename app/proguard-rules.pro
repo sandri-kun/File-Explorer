@@ -23,3 +23,4 @@
 -keepclassmembers class org.eclipse.tm4e.languageconfiguration.internal.model.LanguageConfiguration {
   <init>();
 }
+-keep class org.joni.** { *; }
