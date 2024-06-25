@@ -36,7 +36,7 @@ import com.raival.fileexplorer.util.Log
 import com.raival.fileexplorer.util.PrefsUtils
 import java.io.File
 import java.io.IOException
-import java.util.*
+import java.util.Arrays
 
 class FileExplorerTabFragment : BaseTabFragment {
     val files = ArrayList<FileItem>()
@@ -108,7 +108,9 @@ class FileExplorerTabFragment : BaseTabFragment {
         bottomBarView!!.addItem(
             "Select All",
             R.drawable.ic_baseline_select_all_24
-        ) { setSelectAll(true) }
+        ) {
+            setSelectAll(files.map { it.file } != (dataHolder as FileExplorerTabDataHolder).selectedFiles)
+        }
         bottomBarView!!.addItem(
             "refresh",
             R.drawable.ic_baseline_restart_alt_24
@@ -366,13 +368,18 @@ class FileExplorerTabFragment : BaseTabFragment {
     fun setSelectAll(select: Boolean) {
         if (!select) (dataHolder as FileExplorerTabDataHolder).selectedFiles.clear()
         for (item in files) {
-            item.isSelected = select
+            if (item.isSelected != select) {
+                item.isSelected = select
+                updateSelection(item)
+            }
             if (select) {
                 (dataHolder as FileExplorerTabDataHolder).selectedFiles.add(item.file)
             }
         }
-        // Don't call refresh(), because it will recreate the tab and reset the selection
-        fileList.adapter?.notifyDataSetChanged()
+    }
+
+    fun updateSelection(item: FileItem) {
+        fileList.adapter?.notifyItemChanged(files.indexOf(item))
     }
 
     val selectedFiles: ArrayList<FileItem>

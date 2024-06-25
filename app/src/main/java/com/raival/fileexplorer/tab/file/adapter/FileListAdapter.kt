@@ -141,6 +141,14 @@ class FileListAdapter(private val parentFragment: FileExplorerTabFragment) :
 
             // Handle click event
             background.setOnClickListener {
+                if (fileItem.isSelected) {
+                    fileItem.isSelected = false
+                    (parentFragment.dataHolder as FileExplorerTabDataHolder?)!!.apply {
+                        selectedFiles.remove(fileItem.file)
+                        parentFragment.updateSelection(fileItem)
+                    }
+                    return@setOnClickListener
+                }
                 if (fileItem.file.isFile) {
                     parentFragment.openFile(fileItem)
                 } else {
