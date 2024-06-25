@@ -15,6 +15,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.PopupMenu
@@ -22,6 +23,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textview.MaterialTextView
 import com.raival.fileexplorer.App.Companion.showMsg
 import com.raival.fileexplorer.R
@@ -321,11 +323,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         val storageManager = getSystemService(StorageManager::class.java)!!
         storageManager.storageVolumes.forEach { volume ->
             if (volume.isRemovable)
-                addStorageSpace(volume.getDescription(this), getVolumePath(volume))
+                addStorageSpace(volume.getDescription(this), getVolumePath(volume), true)
         }
     }
 
-    fun getVolumePath(storageVolume: StorageVolume): File {
+    private fun getVolumePath(storageVolume: StorageVolume): File {
         if (VERSION.SDK_INT >= VERSION_CODES.R) return storageVolume.directory!!
         try {
             val storageVolumeClazz: Class<*> = StorageVolume::class.java
@@ -342,7 +344,48 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     }
 
     @SuppressLint("SetTextI18n")
-    private fun addStorageSpace(name: String, root: File) {
+    private fun addStorageSpace(name: String, root: File, isVolume: Boolean = false) {
+        if (isVolume && root.exists() && root.canRead().not()) {
+            val usbManager = getSystemService(StorageManager::class.java)
+            val volume = usbManager.getStorageVolume(root)
+            if (volume == null) {
+                showMsg("Failed to get volume")
+                return
+            }
+
+            val intent = if (VERSION.SDK_INT >= VERSION_CODES.Q) {
+                volume.createOpenDocumentTreeIntent()
+            } else {
+                volume.createAccessIntent(null)!!
+            }
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == RESULT_OK) {
+                    Snackbar.make(
+                        binding.root,
+                        "Access granted",
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+
+                    result.data?.data?.let { treeUri ->
+                        contentResolver.takePersistableUriPermission(
+                            treeUri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                        )
+                    }
+
+                    addStorageSpace(name, root)
+                } else {
+                    Snackbar.make(
+                        binding.root,
+                        "Access denied",
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                }
+            }.launch(intent)
+            return
+        }
+
         val storageDeviceItemBinding = StorageDeviceItemBinding.inflate(layoutInflater)
 
         storageDeviceItemBinding.storageSpaceTitle.text = name
@@ -358,13 +401,13 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 + " available")
 
         storageDeviceItemBinding.root.setOnClickListener {
-
             addNewTab(
                 FileExplorerTabFragment(root),
                 BaseTabFragment.FILE_EXPLORER_TAB_FRAGMENT_PREFIX + generateRandomTag()
             )
             binding.drawer.close()
         }
+
         drawer.storageSpaces.addView(storageDeviceItemBinding.root)
     }
 
