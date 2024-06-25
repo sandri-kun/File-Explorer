@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.slider.Slider
 import com.raival.fileexplorer.R
 import com.raival.fileexplorer.activity.model.MainViewModel
 import com.raival.fileexplorer.databinding.AudioPlayerFragmentBinding
@@ -51,15 +52,21 @@ class AudioPlayerDialog(private val audioFile: File) :
         binding.slider.setLabelFormatter { value: Float ->
             getDurationString(value.toInt() / 1000)
         }
-        binding.slider.addOnChangeListener { _, value, _ ->
-            mediaPlayer.seekTo(value.toInt())
-            binding.progress.text = getDurationString(value.toInt() / 1000)
-        }
+
+        binding.slider.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+            override fun onStartTrackingTouch(slider: Slider) {}
+
+            override fun onStopTrackingTouch(slider: Slider) {
+                mediaPlayer.seekTo(slider.value.toInt())
+                binding.progress.text = getDurationString(slider.value.toInt() / 1000)
+            }
+        })
 
         Handler(Looper.getMainLooper()).post(object : Runnable {
             override fun run() {
                 if (mediaPlayer.isPlaying) {
                     binding.slider.value = min(mediaPlayer.currentPosition.toFloat(), duration)
+                    binding.progress.text = getDurationString(mediaPlayer.currentPosition / 1000)
                     Handler(Looper.getMainLooper()).postDelayed(this, 1000)
                 }
             }
