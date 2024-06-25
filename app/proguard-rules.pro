@@ -23,4 +23,7 @@
 -keepclassmembers class org.eclipse.tm4e.languageconfiguration.internal.model.LanguageConfiguration {
   <init>();
 }
--keep class org.joni.** { *; }
+-keepclassmembers class org.joni.ast.QuantifierNode { *; }
+-repackageclasses ''
+-optimizationpasses 5
+-overloadaggressively
