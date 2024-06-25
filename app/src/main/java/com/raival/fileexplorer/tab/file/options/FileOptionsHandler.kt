@@ -10,6 +10,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.raival.fileexplorer.App.Companion.showMsg
 import com.raival.fileexplorer.R
 import com.raival.fileexplorer.activity.MainActivity
+import com.raival.fileexplorer.activity.TextCompareActivity
 import com.raival.fileexplorer.activity.TextEditorActivity
 import com.raival.fileexplorer.activity.model.MainViewModel
 import com.raival.fileexplorer.common.BackgroundTask
@@ -35,9 +36,8 @@ class FileOptionsHandler(private val parentFragment: FileExplorerTabFragment) {
     private var mainViewModel: MainViewModel? = null
         get() {
             if (field == null) {
-                field = ViewModelProvider(parentFragment.requireActivity()).get(
-                    MainViewModel::class.java
-                )
+                field =
+                    ViewModelProvider(parentFragment.requireActivity())[MainViewModel::class.java]
             }
             return field
         }
@@ -107,6 +107,20 @@ class FileOptionsHandler(private val parentFragment: FileExplorerTabFragment) {
                 FileUtils.shareFiles(selectedFiles, parentFragment.requireActivity())
                 parentFragment.setSelectAll(false)
             }, true)
+            if (selectedFiles.size == 2) {
+                bottomDialog.addOption("Text Compare", R.drawable.ic_round_share_24, {
+                    val intent = Intent()
+                    intent.setClass(
+                        parentFragment.requireActivity(),
+                        TextCompareActivity::class.java
+                    )
+                    intent.putExtra("file1", selectedFiles.first())
+                    intent.putExtra("file2", selectedFiles[1])
+                    parentFragment.requireActivity().startActivity(intent)
+
+                    parentFragment.setSelectAll(false)
+                }, true)
+            }
         }
         if (FileUtils.isSingleFile(selectedFiles)) {
             bottomDialog.addOption(
@@ -314,7 +328,7 @@ class FileOptionsHandler(private val parentFragment: FileExplorerTabFragment) {
 
         input.editText?.setText(selectedFiles[0].name)
         input.editText!!.setSingleLine()
-        FileUtils.setFileValidator(input, selectedFiles[0], selectedFiles[0].parentFile)
+        FileUtils.setFileValidator(input, selectedFiles[0], selectedFiles[0].parentFile!!)
 
         customDialog.setTitle("Rename")
             .addView(input)
@@ -364,7 +378,7 @@ class FileOptionsHandler(private val parentFragment: FileExplorerTabFragment) {
             }
         }) {
             backgroundTask.dismiss()
-            showMsg(if(errorMsg.isEmpty()) "Files have been deleted" else errorMsg)
+            showMsg(errorMsg.ifEmpty { "Files have been deleted" })
             parentFragment.refresh()
         }
         backgroundTask.run()

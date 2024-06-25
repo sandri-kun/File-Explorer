@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import androidx.appcompat.widget.PopupMenu
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.chip.Chip
@@ -369,16 +370,19 @@ class FileExplorerTabFragment : BaseTabFragment {
         if (!select) (dataHolder as FileExplorerTabDataHolder).selectedFiles.clear()
         for (item in files) {
             if (item.isSelected != select) {
-                item.isSelected = select
-                updateSelection(item)
-            }
-            if (select) {
-                (dataHolder as FileExplorerTabDataHolder).selectedFiles.add(item.file)
+                selectItem(item)
             }
         }
     }
 
-    fun updateSelection(item: FileItem) {
+    fun selectItem(item: FileItem) {
+        if (item.isSelected) {
+            item.isSelected = false
+            (dataHolder as FileExplorerTabDataHolder).selectedFiles.remove(item.file)
+        } else {
+            item.isSelected = true
+            (dataHolder as FileExplorerTabDataHolder).selectedFiles.add(item.file)
+        }
         fileList.adapter?.notifyItemChanged(files.indexOf(item))
     }
 
@@ -412,6 +416,26 @@ class FileExplorerTabFragment : BaseTabFragment {
         fileList.adapter = FileListAdapter(this)
         fileList.setHasFixedSize(true)
         initPathHistory()
+
+        ItemTouchHelper(object :
+            ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ) = false
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val file = files[viewHolder.adapterPosition]
+
+                selectItem(file)
+                // Normalize the item position
+                if (viewHolder.itemView.left < 0) {
+                    viewHolder.itemView.animate().x(0f).setDuration(100).start()
+                    return
+                }
+            }
+        }).attachToRecyclerView(fileList)
     }
 
     private fun initPathHistory() {

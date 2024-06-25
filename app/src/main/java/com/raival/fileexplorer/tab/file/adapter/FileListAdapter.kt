@@ -2,7 +2,6 @@ package com.raival.fileexplorer.tab.file.adapter
 
 import android.annotation.SuppressLint
 import android.graphics.drawable.ColorDrawable
-import android.text.TextUtils
 import android.view.View
 import android.view.View.OnLongClickListener
 import android.view.ViewGroup
@@ -80,7 +79,7 @@ class FileListAdapter(private val parentFragment: FileExplorerTabFragment) :
                 IconHelper.setFileIcon(icon, fileItem.file)
             }
 
-            if (TextUtils.isEmpty(fileItem.name)) {
+            if (fileItem.name.isEmpty()) {
                 fileItem.name = fileItem.file.name
             }
             name.text = fileItem.name
@@ -141,13 +140,11 @@ class FileListAdapter(private val parentFragment: FileExplorerTabFragment) :
 
             // Handle click event
             background.setOnClickListener {
-                if (fileItem.isSelected) {
-                    fileItem.isSelected = false
-                    (parentFragment.dataHolder as FileExplorerTabDataHolder?)!!.apply {
-                        selectedFiles.remove(fileItem.file)
-                        parentFragment.updateSelection(fileItem)
+                (parentFragment.dataHolder as FileExplorerTabDataHolder?)!!.apply {
+                    if (selectedFiles.isNotEmpty()) {
+                        parentFragment.selectItem(fileItem)
+                        return@setOnClickListener
                     }
-                    return@setOnClickListener
                 }
                 if (fileItem.file.isFile) {
                     parentFragment.openFile(fileItem)
