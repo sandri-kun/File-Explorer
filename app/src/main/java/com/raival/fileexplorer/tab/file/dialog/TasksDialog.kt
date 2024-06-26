@@ -71,10 +71,10 @@ class TasksDialog(private val fileExplorerTabFragment: FileExplorerTabFragment) 
                 placeHolder.visibility = View.VISIBLE
             }
         }
-        v.setOnLongClickListener label@{
+        v.setOnLongClickListener {
             if (!valid) {
                 run(task)
-                return@label true
+                return@setOnLongClickListener true
             }
             false
         }

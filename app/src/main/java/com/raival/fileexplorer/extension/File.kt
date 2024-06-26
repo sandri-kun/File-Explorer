@@ -151,6 +151,6 @@ fun File.getAllFilesInDir(extension: String): ArrayList<String> {
 }
 
 @SuppressLint("SimpleDateFormat")
-fun File.getLastModifiedDate(REGULAR_DATE_FORMAT: String = "MMM dd , hh:mm a"): String {
-    return SimpleDateFormat(REGULAR_DATE_FORMAT).format(lastModified())
+fun File.getLastModifiedDate(format: String = "MMM dd , hh:mm a"): String {
+    return SimpleDateFormat(format).format(lastModified())
 }

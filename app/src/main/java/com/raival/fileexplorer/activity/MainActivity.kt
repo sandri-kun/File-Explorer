@@ -1,23 +1,16 @@
 package com.raival.fileexplorer.activity
 
 import android.annotation.SuppressLint
-import android.app.PendingIntent
 import android.content.Intent
-import android.hardware.usb.UsbManager
 import android.net.Uri
-import android.os.Build.VERSION
-import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import android.os.Environment
-import android.os.storage.StorageManager
-import android.os.storage.StorageVolume
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.PopupMenu
@@ -25,7 +18,6 @@ import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
-import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textview.MaterialTextView
 import com.raival.fileexplorer.App.Companion.showMsg
 import com.raival.fileexplorer.R
@@ -59,7 +51,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
-import java.lang.reflect.InvocationTargetException
 
 
 class MainActivity : BaseActivity<ActivityMainBinding>() {
@@ -322,86 +313,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
         addStorageSpace("Root Directory", Environment.getRootDirectory())
         addStorageSpace("Storage Directory", Environment.getExternalStorageDirectory())
-
-        val usbManager = getSystemService(UsbManager::class.java)
-        val storageManager = getSystemService(StorageManager::class.java)
-
-        usbManager.deviceList.forEach { (_, usbDevice) ->
-            val permissionIntent = PendingIntent.getBroadcast(
-                this, 0, Intent("com.raival.fileexplorer.USB_PERMISSION"),
-                PendingIntent.FLAG_IMMUTABLE
-            )
-            usbManager.requestPermission(usbDevice, permissionIntent)
-            storageManager.storageVolumes.forEach { storageVolume ->
-                addStorageSpace(
-                    storageVolume.getDescription(this),
-                    getVolumePath(storageVolume),
-                    true
-                )
-            }
-
-        }
-    }
-
-    private fun getVolumePath(storageVolume: StorageVolume): File {
-        if (VERSION.SDK_INT >= VERSION_CODES.R) return storageVolume.directory!!
-        try {
-            val storageVolumeClazz: Class<*> = StorageVolume::class.java
-            val getPath = storageVolumeClazz.getMethod("getPathFile")
-            return getPath.invoke(storageVolume) as File
-        } catch (e: NoSuchMethodException) {
-            e.printStackTrace()
-        } catch (e: IllegalAccessException) {
-            e.printStackTrace()
-        } catch (e: InvocationTargetException) {
-            e.printStackTrace()
-        }
-        return File("/mnt/" + storageVolume.uuid)
     }
 
     @SuppressLint("SetTextI18n")
-    private fun addStorageSpace(name: String, root: File, isVolume: Boolean = false) {
-        if (isVolume && root.exists() && root.canRead().not()) {
-            val usbManager = getSystemService(StorageManager::class.java)
-            val volume = usbManager.getStorageVolume(root)
-            if (volume == null) {
-                showMsg("Failed to get volume")
-                return
-            }
-
-            val intent = if (VERSION.SDK_INT >= VERSION_CODES.Q) {
-                volume.createOpenDocumentTreeIntent()
-            } else {
-                volume.createAccessIntent(null)!!
-            }
-            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (result.resultCode == RESULT_OK) {
-                    Snackbar.make(
-                        binding.root,
-                        "Access granted",
-                        Snackbar.LENGTH_SHORT
-                    ).show()
-
-                    result.data?.data?.let { treeUri ->
-                        contentResolver.takePersistableUriPermission(
-                            treeUri,
-                            Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                        )
-                    }
-
-                    addStorageSpace(name, root)
-                } else {
-                    Snackbar.make(
-                        binding.root,
-                        "Access denied",
-                        Snackbar.LENGTH_SHORT
-                    ).show()
-                }
-            }.launch(intent)
-            return
-        }
-
+    private fun addStorageSpace(name: String, root: File) {
         val storageDeviceItemBinding = StorageDeviceItemBinding.inflate(layoutInflater)
 
         storageDeviceItemBinding.storageSpaceTitle.text = name

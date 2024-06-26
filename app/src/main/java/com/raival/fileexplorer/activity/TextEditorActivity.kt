@@ -111,11 +111,17 @@ class TextEditorActivity : BaseActivity<TextEditorActivityBinding>() {
             if (editorViewModel.content != null) {
                 binding.editor.setText(editorViewModel.content.toString())
             } else {
+                val progressView = layoutInflater.inflate(R.layout.progress_view, null)
+                val alertDialog = MaterialAlertDialogBuilder(this)
+                    .setCancelable(false)
+                    .setView(progressView)
+                    .show()
                 lifecycleScope.launch(Dispatchers.IO) {
                     val content = editorViewModel.file!!.readText()
 
                     lifecycleScope.launch(Dispatchers.Main) {
                         binding.editor.setText(content)
+                        alertDialog.dismiss()
                     }
                 }
             }

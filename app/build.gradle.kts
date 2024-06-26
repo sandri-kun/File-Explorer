@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -64,7 +65,8 @@ dependencies {
     implementation("io.noties.markwon:core:4.6.2")
 
     implementation("com.github.bumptech.glide:glide:5.0.0-rc01")
-    annotationProcessor("com.github.bumptech.glide:compiler:5.0.0-rc01")
+    ksp("com.github.bumptech.glide:ksp:5.0.0-rc01")
+    implementation("com.caverock:androidsvg:1.4")
 
     implementation("com.pixplicity.easyprefs:EasyPrefs:1.10.0")
     implementation("net.lingala.zip4j:zip4j:2.11.5")
