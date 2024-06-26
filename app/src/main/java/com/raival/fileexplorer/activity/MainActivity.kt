@@ -1,7 +1,9 @@
 package com.raival.fileexplorer.activity
 
 import android.annotation.SuppressLint
+import android.app.PendingIntent
 import android.content.Intent
+import android.hardware.usb.UsbManager
 import android.net.Uri
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
@@ -320,10 +322,28 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
         addStorageSpace("Root Directory", Environment.getRootDirectory())
         addStorageSpace("Storage Directory", Environment.getExternalStorageDirectory())
-        val storageManager = getSystemService(StorageManager::class.java)!!
-        storageManager.storageVolumes.forEach { volume ->
-            if (volume.isRemovable)
-                addStorageSpace(volume.getDescription(this), getVolumePath(volume), true)
+
+        val usbManager = getSystemService(UsbManager::class.java)
+        val storageManager = getSystemService(StorageManager::class.java)
+
+        usbManager.deviceList.forEach { (_, usbDevice) ->
+            val permissionIntent = PendingIntent.getBroadcast(
+                this, 0, Intent("com.raival.fileexplorer.USB_PERMISSION"),
+                PendingIntent.FLAG_IMMUTABLE
+            )
+            usbManager.requestPermission(usbDevice, permissionIntent)
+            storageManager.storageVolumes.forEach { storageVolume ->
+                println(storageVolume.uuid)
+                println(usbDevice.serialNumber)
+                if (storageVolume.uuid == usbDevice.serialNumber) {
+                    addStorageSpace(
+                        storageVolume.getDescription(this),
+                        getVolumePath(storageVolume),
+                        true
+                    )
+                }
+            }
+
         }
     }
 
