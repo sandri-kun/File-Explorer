@@ -477,6 +477,11 @@ class TextEditorActivity : BaseActivity<TextEditorActivityBinding>() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        binding.editor.release()
+    }
+
     companion object {
         private const val TAG = "TextEditorActivity"
         private const val LANGUAGE_JAVA = 0

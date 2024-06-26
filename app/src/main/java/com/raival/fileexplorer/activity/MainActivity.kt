@@ -333,15 +333,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             )
             usbManager.requestPermission(usbDevice, permissionIntent)
             storageManager.storageVolumes.forEach { storageVolume ->
-                println(storageVolume.uuid)
-                println(usbDevice.serialNumber)
-                if (storageVolume.uuid == usbDevice.serialNumber) {
-                    addStorageSpace(
-                        storageVolume.getDescription(this),
-                        getVolumePath(storageVolume),
-                        true
-                    )
-                }
+                addStorageSpace(
+                    storageVolume.getDescription(this),
+                    getVolumePath(storageVolume),
+                    true
+                )
             }
 
         }

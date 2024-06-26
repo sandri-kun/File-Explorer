@@ -1,5 +1,6 @@
 package com.raival.fileexplorer.tab.file.dialog
 
+import android.content.DialogInterface
 import android.media.MediaMetadataRetriever
 import android.media.MediaPlayer
 import android.net.Uri
@@ -23,6 +24,7 @@ class AudioPlayerDialog(private val audioFile: File) :
 
     private lateinit var mainViewModel: MainViewModel
     private lateinit var binding: AudioPlayerFragmentBinding
+    private lateinit var mediaPlayer: MediaPlayer
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -43,7 +45,7 @@ class AudioPlayerDialog(private val audioFile: File) :
         val duration =
             metadata.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)!!.toFloat()
 
-        val mediaPlayer = MediaPlayer.create(requireContext(), Uri.fromFile(audioFile))
+        mediaPlayer = MediaPlayer.create(requireContext(), Uri.fromFile(audioFile))
         mediaPlayer.start()
 
         binding.audioFile.text = audioFile.name
@@ -103,6 +105,12 @@ class AudioPlayerDialog(private val audioFile: File) :
             mediaPlayer.release()
             dismiss()
         }
+    }
+
+    override fun onDismiss(dialog: DialogInterface) {
+        super.onDismiss(dialog)
+        mediaPlayer.stop()
+        mediaPlayer.release()
     }
 
     private fun getDurationString(duration: Int): String {
