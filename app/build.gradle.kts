@@ -55,11 +55,11 @@ android {
 }
 
 dependencies {
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 
-    implementation("androidx.appcompat:appcompat:1.7.0")
-    implementation("com.google.android.material:material:1.13.0-alpha03")
-    implementation("com.google.code.gson:gson:2.11.0")
+    implementation("androidx.appcompat:appcompat:1.7.1")
+    implementation("com.google.android.material:material:1.13.0-alpha14")
+    implementation("com.google.code.gson:gson:2.13.1")
     implementation("commons-io:commons-io:2.16.1")
     implementation("com.jsibbold:zoomage:1.3.1")
     implementation("io.noties.markwon:core:4.6.2")
@@ -71,7 +71,7 @@ dependencies {
     implementation("com.pixplicity.easyprefs:EasyPrefs:1.10.0")
     implementation("net.lingala.zip4j:zip4j:2.11.5")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0-RC")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
     implementation("io.github.java-diff-utils:java-diff-utils:4.12")
 
     implementation(platform("io.github.Rosemoe.sora-editor:bom:0.23.4-43e1706-SNAPSHOT"))
